@@ -1,12 +1,9 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://w3.org">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://w3.org">
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Загрузка...</title>
     
-    <!-- Предварительно загружаем фоновый звук для современных браузеров и IE -->
-    <bgsound id="xp-sound" src="scream.mp3" loop="-1" volume="-10000">
-
     <style type="text/css">
         body, html {
             margin: 0px;
@@ -68,7 +65,7 @@
             margin: 0px 5px;
         }
 
-        /* Полноэкранный блок для Джеффа */
+        /* Полноэкранный блок для видео-скримера */
         #screamer-overlay {
             display: none;
             position: absolute;
@@ -77,19 +74,22 @@
             width: 100%;
             height: 100%;
             z-index: 9999;
+            background-color: #000000;
         }
 
-        #screamer-img {
+        /* Видео растягивается на весь экран и сохраняет пропорции */
+        #screamer-video {
             width: 100%;
             height: 100%;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
 
-    <!-- Слой со скримером (ваша гифка) -->
+    <!-- Слой со скримером (теперь тут бесконечное видео) -->
     <div id="screamer-overlay">
-        <img src="jeff.gif" id="screamer-img" alt="">
+        <video id="screamer-video" src="video.mp4" loop="loop" preload="auto" playsinline></video>
     </div>
 
     <!-- Ретро-таблица центрирования баннера и ошибок -->
@@ -115,56 +115,48 @@
         </tr>
     </table>
 
-    <audio id="modern-sound" src="scream.mp3" loop="loop"></audio>
-
     <script type="text/javascript">
         var isScreamerRunning = false;
         var strobeState = false;
         var isIE = false;
 
-        // ПРОВЕРКА НА IE (совместимая со старыми стандартами Windows XP)
+        // ПРОВЕРКА НА IE
         var ua = window.navigator.userAgent;
         if (ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1) {
             isIE = true;
-            // Прячем кнопки и выводим ошибку для IE
             document.getElementById('cookie-banner').style.display = 'none';
             document.getElementById('ie-warning').style.display = 'block';
         }
 
-        // Старый JavaScript-стробоскоп
+        // Старый JavaScript-стробоскоп (мигание экрана поверх видео)
         function doStrobe() {
             if (!isScreamerRunning) return;
             strobeState = !strobeState;
-            document.body.style.backgroundColor = strobeState ? "#FF0000" : "#FFFFFF";
+            // Чтобы мигание было видно, меняем фон подложки видео (если в видео есть прозрачность)
+            document.getElementById('screamer-overlay').style.backgroundColor = strobeState ? "#FF0000" : "#000000";
             setTimeout("doStrobe()", 40); 
         }
 
         function runScreamer() {
-            // Если открыто в Internet Explorer — полностью блокируем запуск
             if (isIE || isScreamerRunning) return;
             isScreamerRunning = true;
 
-            // Запрос полноэкранного режима для современных браузеров
+            // Запрос полноэкранного режима
             var el = document.documentElement;
             if (el.requestFullscreen) el.requestFullscreen();
             else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
             else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
 
-            // Скрываем таблицу, показываем гифку
+            // Скрываем таблицу, показываем видео
             document.getElementById('main-table').style.display = 'none';
             document.getElementById('screamer-overlay').style.display = 'block';
             document.body.style.cursor = 'none';
 
-            // Воспроизведение звука (для обычных браузеров)
-            var modernSound = document.getElementById('modern-sound');
-            if (modernSound && modernSound.play) {
-                modernSound.play();
-            }
-
-            // Воспроизведение звука (если это старый движок не-IE, например старая Opera на XP)
-            var xpSound = document.getElementById('xp-sound');
-            if (xpSound) {
-                xpSound.volume = 0;
+            // Воспроизведение видео со звуком
+            var video = document.getElementById('screamer-video');
+            if (video) {
+                video.muted = false; // Гарантируем включение звука после клика по кнопке
+                video.play();
             }
 
             doStrobe();
@@ -180,7 +172,7 @@
         // ЗАЩИТА ОТ ESC
         if (document.addEventListener) {
             var handleEsc = function() {
-                var isFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+                var isFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullscreenElement;
                 if (!isFull && isScreamerRunning && !isIE) {
                     document.body.style.cursor = 'default';
                     alert("Ты затроллен!");
